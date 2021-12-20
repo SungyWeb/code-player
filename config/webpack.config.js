@@ -1,11 +1,26 @@
 const path = require('path')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
 
+const dist = path.resolve(__dirname, '../dist')
 module.exports = {
-  mode: 'production',
+  mode: 'development',
   entry: path.resolve(__dirname, '../src/index.js'),
   output: {
-    path: path.resolve(__dirname, '../dist'),
-    filename: 'code-play.js'
-  }
-
+    path: dist,
+    filename: 'code-play.js',
+    clean: true,
+  },
+  devtool: 'inline-source-map',
+  devServer: {
+    open: true,
+    compress: true,
+    static: dist
+  },
+  plugins: [
+    new CopyWebpackPlugin({
+      patterns: [
+        path.resolve(__dirname, '../demo')
+      ]
+    }),
+  ]
 }
