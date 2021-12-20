@@ -1,3 +1,3 @@
-export default function console () {
+export default function log () {
   console.log('==========')
 }
