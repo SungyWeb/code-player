@@ -27,6 +27,8 @@ class CodePlayer {
     // 将画布放大dpr倍
     this.width = el.offsetWidth * dpr
     this.height = el.offsetHeight * dpr
+    // 将相关尺寸放大
+    // this.options.fontSize *= dpr
 
     this._init()
   }
@@ -46,8 +48,9 @@ class CodePlayer {
     ctx.save()
 
     ctx.font = this.options.fontSize + 'px Menlo' // todo Menlo字体 window肯能没有
-    this.step = ctx.measureText('A').width * this.dpr
-
+    this.stepX = ctx.measureText('A').width
+    this.stepY = this.options.fontSize * 2
+    // console.log()
 
     ctx.fillStyle = BgColor
     ctx.fillRect(0, 0, w, h)
@@ -67,23 +70,23 @@ class CodePlayer {
   }
 
   _drawGrid () {
-    const { ctx, width, height, step } = this
+    const { ctx, width, height, stepX, stepY } = this
     ctx.restore()
 
     ctx.strokeStyle = GridLine.color
     ctx.lineWidth = GridLine.lineWidth
     ctx.setLineDash([4, 2])
 
-    const maxVerticalLineCount = Math.floor(height / step)
-    const maxHorizationLineCount = Math.floor(width / step)
+    const maxVerticalLineCount = Math.floor(height / stepY)   // 横线最多画几个
+    const maxHorizationLineCount = Math.floor(width / stepX)  // 竖线最多画几个
     ctx.beginPath()
     for (let i = 1; i <= maxVerticalLineCount; i++) {
-      ctx.moveTo(0, step * i)
-      ctx.lineTo(width, step * i)
+      ctx.moveTo(0, stepX * i)
+      ctx.lineTo(width, stepX * i)
     }
     for (let i = 1; i <= maxHorizationLineCount; i++) {
-      ctx.moveTo(step * i, 0)
-      ctx.lineTo(step * i, height)
+      ctx.moveTo(stepX * i, 0)
+      ctx.lineTo(stepX * i, height)
     }
     ctx.stroke()
   }
@@ -92,12 +95,14 @@ class CodePlayer {
    * @param {string} code
    */
   run (code) {
-    const { ctx, width, step } = this
+    const { ctx, width, stepX, stepY} = this
     ctx.restore()
     ctx.setLineDash([])
-    ctx.font = (this.options.fontSize * this.dpr) + 'px Menlo' // todo Menlo字体 window肯能没有
+    ctx.font = this.options.fontSize + 'px Menlo' // todo Menlo字体 window肯能没有
     ctx.fillStyle = 'yellow'
-    ctx.fillText(code + '\n asldjfalsjf ', step, step, width - (2 * step))
+    ctx.textBaseline = 'bottom'
+    // ctx.fillText(code + '\n asldjfalsjf ', 0, 0, width - (2 * stepX))
+    ctx.fillText('asdfasdfasdf ASDFASDF ', stepX * 2, stepY * 2, width - (2 * stepX))
   }
 
 

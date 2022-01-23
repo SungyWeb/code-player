@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    body {
+      /* background-color: rgba(100, 145, 250, 0.3); */
+      padding: 0;
+      margin: 0;
+    }
+    #canvas {
+      display: block;
+      margin: 20px auto;
+      border: thin solid #aaaaaa;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="canvas" width="800" height="520"></canvas>
+  <script>
+    var canvas = document.getElementById('canvas'),
+      /** @type CanvasRenderingContext2D */
+      c = canvas.getContext('2d')
+
+    var centroid_radius = 10,
+      centroid_stroke_style = 'rgba(0,0,0,0.5)',
+      centroid_fill_style = 'rgba(80, 190, 240, 0.6)',
+
+      ring_inner_radius = 35,
+      ring_outer_radius = 55,
+
+      guidewire_stroke_style = 'goldenrod',
+      guidewire_fill_style = 'rgba(250, 250, 0, 0.6)',
+
+      tick_long_stroke_style = 'rgba(100, 140, 230, 0.9)',
+      tick_short_stroke_style = 'rgba(100, 140, 230, 0.7)',
+
+      tick_width = 10,
+
+      tracking_dial_stroking_style = 'rgba(100, 140, 230, 0.5)',
+
+      number_fill_style = 'rgba(0,0,0,230, 0.9)',
+      number_font_size = 12,
+
+      circle = {
+        x: c.canvas.width/2,
+        y: c.canvas.height / 2,
+        radius: 150
+      }
+
+
+
+    function drawGrid(color, stepX, stepY) {
+      c.save()
+      c.shadowColor = undefined
+      c.shadowOffsetX = 0
+      c.shadowOffsetY = 0
+
+      c.strokeStyle = color
+      c.fillStyle = '#ffffff'
+      c.lineWidth = 0.5
+      c.fillRect(0, 0, c.canvas.width, c.canvas.height)
+
+      c.beginPath()
+      for(var i = stepX + 0.5; i < c.canvas.width; i += stepX) {
+        c.moveTo(i, 0)
+        c.lineTo(i, c.canvas.height)
+      }
+      c.stroke()
+
+      c.beginPath()
+      for(var i = stepY + 0.5; i < c.canvas.height; i += stepY) {
+        c.moveTo(0, i)
+        c.lineTo(c.canvas.width, i)
+      }
+      c.stroke()
+      c.restore()
+    }
+
+
+    /**
+     * 圆心
+     */
+    function drawCentroid() {
+      c.beginPath()
+      c.save()
+      c.strokeStyle = centroid_stroke_style
+      c.fillStyle = centroid_fill_style
+      c.arc(circle.x, circle.y, centroid_radius, 0, Math.PI * 2, false)
+      c.stroke()
+      c.fill()
+      c.restore()
+
+    }
+
+    /**
+     * 画指针
+     */
+    function drawCentroidGuidewire(loc) {
+      var angle = -Math.PI/4,
+        radius,
+        endpt
+
+      radius = circle.radius + ring_outer_radius
+
+      if(loc.x >= circle.x) {
+        endpt = {
+          x: circle.x + radius * Math.cos(angle),
+          y: circle.y + radius * Math.sin(angle)
+        }
+      }else {
+        endpt = {
+          x: circle.x - radius * Math.cos(angle),
+          y: circle.y - radius * Math.sin(angle)
+        }
+      }
+
+      c.save()
+      c.strokeStyle = guidewire_stroke_style
+      c.fillStyle = guidewire_fill_style
+
+      c.beginPath()
+      c.moveTo(circle.x, circle.y)
+      c.lineTo(endpt.x, endpt.y)
+      c.stroke()
+
+      c.beginPath()
+      c.strokeStyle = tick_long_stroke_style
+      // c.fillStyle = 'red'
+      c.arc(endpt.x, endpt.y, 5, 0, Math.PI * 2, false)
+      c.stroke()
+      c.fill()
+
+      c.restore()
+    }
+
+
+    /**
+     * 画圆圈
+     */
+    function drawRing() {
+      c.save()
+
+      // 外圈
+      c.shadowColor = 'rgba(0,0,0,0.7)'
+      c.shadowOffsetX = 3
+      c.shadowOffsetY = 3
+      c.shadowBlur = 6
+      c.strokeStyle = tracking_dial_stroking_style
+      c.beginPath()
+      c.arc(circle.x, circle.y, ring_outer_radius + circle.radius, 0, Math.PI * 2, true)
+      c.stroke()
+
+      // 内圈
+      c.strokeStyle = 'rgba(0,0,0,0.1)'
+      c.fillStyle = 'rgba(100, 140, 230, 0.1)'
+      c.arc(circle.x, circle.y, ring_inner_radius + circle.radius, 0, Math.PI * 2, false)
+      c.stroke()
+      c.fill()
+
+      c.restore()
+    }
+
+    /**
+     *  画标尺的范圆
+     */
+    function drawTickInCircle() {
+      c.save()
+      c.beginPath()
+      c.strokeStyle = 'rgba(0,0,0,0.1)'
+      c.arc(circle.x, circle.y, circle.radius + ring_inner_radius - tick_width, 0, Math.PI * 2, false)
+      c.stroke()
+      c.restore()
+    }
+
+    function drawTick(angle, radius, cnt) {
+      var tickWidth = cnt % 10 === 0 ? tick_width : tick_width / 2
+      c.moveTo(
+        circle.x + Math.cos(angle) * (radius - tickWidth),
+        circle.y + Math.sin(angle) * (radius - tickWidth)
+      )
+
+      c.lineTo(
+        circle.x + Math.cos(angle) * (radius),
+        circle.y + Math.sin(angle) * (radius)
+      )
+    }
+
+    function drawTicks() {
+      var radius = circle.radius + ring_inner_radius,
+        angle_max = 2 * Math.PI,
+        angle_delta = Math.PI / 180
+
+      c.save()
+      c.beginPath()
+      for(var angle = 0, cnt = 0; angle < angle_max; angle += angle_delta, cnt++) {
+        drawTick(angle, radius, cnt)
+      }
+      // c.strokeStyle = 'red'
+      c.stroke()
+      c.restore()
+    }
+
+    function drawNumbers() {
+      var radius = circle.radius + ring_inner_radius
+
+      c.save()
+      c.fillStyle = number_fill_style
+
+      c.font = number_font_size + 'px Helvetica'
+
+      for(var angle = 0; angle < Math.PI * 2; angle += 30 * Math.PI / 180) {
+        c.fillText(
+          (angle / Math.PI * 180).toFixed(0),
+          circle.x + (radius - tick_width * 2) * Math.cos(angle),
+          circle.y + (radius - tick_width * 2) * Math.sin(angle),
+
+        )
+      }
+      c.restore()
+    }
+
+    function drawDail() {
+      var loc = {
+        x: circle.x, y: circle.y
+      }
+
+      c.textAlign = 'center'
+      c.textBaseline = 'middle'
+      c.shadowColor = 'rgba(0,0,0,0.4)'
+      c.shadowOffsetX = 2
+      c.shadowOffsetY = 2
+      c.shadowBlur = 4
+      drawGrid('lightgray', 10, 10)
+      drawCentroid()
+      drawCentroidGuidewire(loc)
+      drawRing()
+      drawTickInCircle()
+      drawTicks()
+      drawNumbers()
+    }
+    drawDail()
+  </script>
+</body>
+</html>
